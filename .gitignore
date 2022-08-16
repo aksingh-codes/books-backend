@@ -54,3 +54,6 @@ venv/
 
 # Other Files
 books_data.js
+
+# Environment variables
+.env
