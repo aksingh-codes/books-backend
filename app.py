@@ -1,5 +1,5 @@
 import datetime
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 
@@ -330,6 +330,12 @@ def return_book():
             "message": "ContentType is not supported!"
         })
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return jsonify({
+        "success": False,
+        "message": "The requested page does not exist."
+    }), 404
 
 if __name__ == "__main__":
     app.run(debug=True)
