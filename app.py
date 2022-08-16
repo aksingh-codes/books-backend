@@ -81,7 +81,10 @@ def books():
                 output.append(
                     {'name': book['name'], 'category': book['category'], 'rent_per_day': book['rent_per_day']})
 
-            return jsonify(output)
+            return jsonify({
+                "success": True,
+                "results": output
+            })
 
         except:
             return jsonify({
@@ -123,14 +126,16 @@ def book():
             json = request.get_json()
             book_name = json.get('book_name')
 
-            transactions = transactions_collection.find(
-                {"book_name": book_name})
+            transactions = list(transactions_collection.find(
+                {"book_name": book_name}))
 
-            list_transactions = list(transactions)
-            if (len(list_transactions) == 0):
-                return jsonify("ERROR: No transactions found for book")
+            if (len(transactions) == 0):
+                return jsonify({
+                    "success": False,
+                    "message": "No transactions found for book"
+                })
 
-            book_id = list_transactions[0]['book_id']
+            book_id = transactions[0]['book_id']
 
             count = 0
             people = []
@@ -169,8 +174,8 @@ def person():
     content_type = request.headers.get('Content-Type')
     if content_type == 'application/json':
         try:
-            json = request.json
-            person_name = json['person_name']
+            json = request.get_json()
+            person_name = json.get('person_name')
 
             transactions = transactions_collection.find(
                 {"person_name": person_name})
@@ -205,16 +210,16 @@ def person():
 
 @app.route('/transactions/bydate')
 def bydate():
-    json = request.json
-    greater_than = json['greater_than']
-    less_than = json['less_than']
+    json = request.get_json()
+    greater_than = json.get('greater_than')
+    less_than = json.get('less_than')
 
     try:
         transactions = transactions_collection.find(
             {
                 "issue_date": {
                     "$gt": datetime.datetime.strptime(greater_than, "%Y-%m-%d"),
-                    "lt": datetime.datetime.strptime(less_than, "%Y-%m-%d")}
+                    "$lt": datetime.datetime.strptime(less_than, "%Y-%m-%d")}
             })
 
         output = []
@@ -230,7 +235,8 @@ def bydate():
             "results": output
         })
 
-    except:
+    except Exception as e:
+        print(str(e))
         return jsonify({
             "success": False,
             "message": "Something went wrong!"
@@ -242,9 +248,9 @@ def issue_book():
     content_type = request.headers.get('Content-Type')
     if content_type == 'application/json':
         try:
-            json = request.json
-            book_name = json['book_name']
-            person_name = json['person_name']
+            json = request.get_json()
+            book_name = json.get('book_name')
+            person_name = json.get('person_name')
             issue_date = datetime.datetime.now()
 
             # Check if already taken the book
@@ -288,9 +294,9 @@ def return_book():
     content_type = request.headers.get('Content-Type')
     if content_type == 'application/json':
         try:
-            json = request.json
-            book_name = json['book_name']
-            person_name = json['person_name']
+            json = request.get_json()
+            book_name = json('book_name')
+            person_name = json('person_name')
 
             # Find and delete Transaction
             found_transaction = transactions_collection.find_one(
